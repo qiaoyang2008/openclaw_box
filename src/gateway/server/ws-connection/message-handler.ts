@@ -403,12 +403,14 @@ export function attachGatewayWsMessageHandler(params: {
         const hasTokenAuth = Boolean(connectParams.auth?.token);
         const hasPasswordAuth = Boolean(connectParams.auth?.password);
         const hasSharedAuth = hasTokenAuth || hasPasswordAuth;
+        const disableAllDeviceAuth =
+          configSnapshot.gateway?.controlUi?.dangerouslyDisableDeviceAuth === true;
         const allowInsecureControlUi =
           isControlUi && configSnapshot.gateway?.controlUi?.allowInsecureAuth === true;
-        const disableControlUiDeviceAuth =
-          isControlUi && configSnapshot.gateway?.controlUi?.dangerouslyDisableDeviceAuth === true;
-        const allowControlUiBypass = allowInsecureControlUi || disableControlUiDeviceAuth;
-        const device = disableControlUiDeviceAuth ? null : deviceRaw;
+        const disableControlUiDeviceAuth = isControlUi && disableAllDeviceAuth;
+        const allowControlUiBypass =
+          disableAllDeviceAuth || allowInsecureControlUi || disableControlUiDeviceAuth;
+        const device = disableAllDeviceAuth ? null : deviceRaw;
 
         const authResult = await authorizeGatewayConnect({
           auth: resolvedAuth,

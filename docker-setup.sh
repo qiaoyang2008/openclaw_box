@@ -189,15 +189,26 @@ if [[ ! -f "$OPENCLAW_CONFIG_FILE" ]]; then
 }
 CONFIG_EOF
 else
-  # Update existing config to ensure gateway auth token is set
-  echo "==> Updating gateway token in existing config: $OPENCLAW_CONFIG_FILE"
-  # Check if the config already has the auth section
-  if ! grep -q '"auth"' "$OPENCLAW_CONFIG_FILE"; then
-    # Simple update: insert auth section after bind line
-    sed -i.bak 's/"bind": "[^"]*"/"bind": "'${OPENCLAW_GATEWAY_BIND:-lan}'",\n    "auth": {\n      "mode": "token",\n      "token": "'${OPENCLAW_GATEWAY_TOKEN}'"\n    }/' "$OPENCLAW_CONFIG_FILE"
-    rm -f "$OPENCLAW_CONFIG_FILE.bak"
-  fi
+  echo "==> Updating existing config: $OPENCLAW_CONFIG_FILE"
 fi
+
+# Ensure required gateway settings (bind, controlUi, auth token) are always applied,
+# even on re-runs where onboarding may have previously overwritten them.
+echo "==> Patching config: $OPENCLAW_CONFIG_FILE"
+python3 -c '
+import json, sys
+path, bind, token = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(path) as f:
+    cfg = json.load(f)
+gw = cfg.setdefault("gateway", {})
+gw["bind"] = bind
+gw["controlUi"] = {"dangerouslyDisableDeviceAuth": True}
+gw.setdefault("auth", {}).update({"mode": "token", "token": token})
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+print("  bind=" + bind + " controlUi.dangerouslyDisableDeviceAuth=true token=" + token[:8] + "...")
+' "$OPENCLAW_CONFIG_FILE" "${OPENCLAW_GATEWAY_BIND:-lan}" "${OPENCLAW_GATEWAY_TOKEN}"
 
 echo "==> Building Docker image: $IMAGE_NAME"
 # Temporarily remove Feishu extension to avoid warnings
@@ -213,19 +224,25 @@ docker build \
   "$ROOT_DIR"
 
 echo ""
-echo "==> Onboarding (interactive)"
-echo "When prompted:"
-echo "  - Gateway bind: lan"
-echo "  - Gateway auth: token"
-echo "  - Gateway token: $OPENCLAW_GATEWAY_TOKEN"
-echo "  - Tailscale exposure: Off"
-echo "  - Install Gateway daemon: No"
-echo ""
-docker compose "${COMPOSE_ARGS[@]}" run --rm openclaw-cli onboard --no-install-daemon
+echo "==> Onboarding (quickstart)"
+docker compose "${COMPOSE_ARGS[@]}" run --rm openclaw-cli onboard --no-install-daemon --flow quickstart || true
 
-# Re-apply control UI settings after onboarding (onboarding may have overwritten them)
-echo "==> Restoring gateway development settings..."
-jq '.gateway.controlUi = {"dangerouslyDisableDeviceAuth": true} | .gateway.bind |= if . == "loopback" then "lan" else . end' "$OPENCLAW_CONFIG_FILE" > /tmp/openclaw.json && mv /tmp/openclaw.json "$OPENCLAW_CONFIG_FILE"
+# Re-apply gateway settings after onboarding (onboarding may overwrite bind/controlUi).
+echo "==> Re-applying gateway settings..."
+python3 -c '
+import json, sys
+path, bind, token = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(path) as f:
+    cfg = json.load(f)
+gw = cfg.setdefault("gateway", {})
+gw["bind"] = bind
+gw["controlUi"] = {"dangerouslyDisableDeviceAuth": True}
+gw.setdefault("auth", {}).update({"mode": "token", "token": token})
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+print("  bind=" + bind + " controlUi.dangerouslyDisableDeviceAuth=true token=" + token[:8] + "...")
+' "$OPENCLAW_CONFIG_FILE" "${OPENCLAW_GATEWAY_BIND:-lan}" "${OPENCLAW_GATEWAY_TOKEN}"
 
 echo ""
 echo "==> Provider setup (optional)"
@@ -266,3 +283,4 @@ if ! docker compose "${COMPOSE_ARGS[@]}" ps openclaw-gateway | grep -q "Up"; the
 else
   echo "✓ Gateway is already running"
 fi
+

@@ -200,6 +200,12 @@ else
 fi
 
 echo "==> Building Docker image: $IMAGE_NAME"
+# Temporarily remove Feishu extension to avoid warnings
+if [[ -d "$ROOT_DIR/extensions/feishu" ]]; then
+  mv "$ROOT_DIR/extensions/feishu" "$ROOT_DIR/extensions/feishu.disabled"
+  trap "mv '$ROOT_DIR/extensions/feishu.disabled' '$ROOT_DIR/extensions/feishu' 2>/dev/null || true" EXIT
+fi
+
 docker build \
   --build-arg "OPENCLAW_DOCKER_APT_PACKAGES=${OPENCLAW_DOCKER_APT_PACKAGES}" \
   -t "$IMAGE_NAME" \

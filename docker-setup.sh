@@ -244,3 +244,15 @@ echo ""
 echo "Commands:"
 echo "  ${COMPOSE_HINT} logs -f openclaw-gateway"
 echo "  ${COMPOSE_HINT} exec openclaw-gateway node dist/index.js health --token \"$OPENCLAW_GATEWAY_TOKEN\""
+
+# Ensure gateway is running
+echo ""
+echo "==> Verifying gateway is running..."
+if ! docker compose "${COMPOSE_ARGS[@]}" ps openclaw-gateway | grep -q "Up"; then
+  echo "Gateway not running, starting it now..."
+  docker compose "${COMPOSE_ARGS[@]}" up -d openclaw-gateway
+  sleep 2
+  echo "✓ Gateway started successfully"
+else
+  echo "✓ Gateway is already running"
+fi

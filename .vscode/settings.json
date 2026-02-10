@@ -18,5 +18,7 @@
   "typescript.reportStyleChecksAsWarnings": false,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.experimental.useTsgo": true
+  "typescript.experimental.useTsgo": true,
+  "openclaw.gatewayUrl": "ws://127.0.0.1:18789",
+  "openclaw.token": "9e47063b5b533dc5bcd009111ea7f1168a50b583629d056b5418e597907ae2b3"
 }

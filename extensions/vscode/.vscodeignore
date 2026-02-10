@@ -1,0 +1,8 @@
+src/**
+node_modules/**
+esbuild.config.mjs
+tsconfig.json
+scripts/**
+.gitignore
+!dist/
+!control-ui/

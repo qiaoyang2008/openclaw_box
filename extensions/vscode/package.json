@@ -1,0 +1,110 @@
+{
+  "name": "openclaw-control",
+  "displayName": "OpenClaw Control",
+  "description": "Control UI for OpenClaw gateway — manage agents, channels, sessions, and chat",
+  "version": "0.1.0",
+  "publisher": "openclaw",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "openclaw.openControlUI",
+        "title": "OpenClaw: Open Control UI"
+      },
+      {
+        "command": "openclaw.connect",
+        "title": "OpenClaw: Connect to Gateway"
+      },
+      {
+        "command": "openclaw.disconnect",
+        "title": "OpenClaw: Disconnect from Gateway"
+      },
+      {
+        "command": "openclaw.navigateTab",
+        "title": "OpenClaw: Navigate to Tab..."
+      },
+      {
+        "command": "openclaw.showChat",
+        "title": "OpenClaw: Open Chat"
+      },
+      {
+        "command": "openclaw.showOverview",
+        "title": "OpenClaw: Open Overview"
+      },
+      {
+        "command": "openclaw.showLogs",
+        "title": "OpenClaw: Open Logs"
+      }
+    ],
+    "configuration": {
+      "title": "OpenClaw",
+      "properties": {
+        "openclaw.gatewayUrl": {
+          "type": "string",
+          "default": "ws://127.0.0.1:18789",
+          "description": "WebSocket URL of the OpenClaw gateway"
+        },
+        "openclaw.token": {
+          "type": "string",
+          "default": "",
+          "description": "Authentication token for the gateway (from gateway.auth.token in config)"
+        },
+        "openclaw.sessionKey": {
+          "type": "string",
+          "default": "main",
+          "description": "Default session key for the chat tab"
+        },
+        "openclaw.theme": {
+          "type": "string",
+          "enum": [
+            "system",
+            "light",
+            "dark"
+          ],
+          "default": "system",
+          "description": "UI theme for the Control panel"
+        },
+        "openclaw.controlUiPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the built Control UI assets (dist/control-ui/). Auto-detected from workspace if empty."
+        },
+        "openclaw.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect to the gateway when the Control UI opens"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "openclaw.openControlUI",
+        "key": "ctrl+shift+o",
+        "mac": "cmd+shift+o"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "prepackage": "node scripts/copy-ui.mjs",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.9.0"
+  }
+}

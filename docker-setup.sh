@@ -223,6 +223,10 @@ echo "  - Install Gateway daemon: No"
 echo ""
 docker compose "${COMPOSE_ARGS[@]}" run --rm openclaw-cli onboard --no-install-daemon
 
+# Re-apply control UI settings after onboarding (onboarding may have overwritten them)
+echo "==> Restoring gateway development settings..."
+jq '.gateway.controlUi = {"dangerouslyDisableDeviceAuth": true} | .gateway.bind |= if . == "loopback" then "lan" else . end' "$OPENCLAW_CONFIG_FILE" > /tmp/openclaw.json && mv /tmp/openclaw.json "$OPENCLAW_CONFIG_FILE"
+
 echo ""
 echo "==> Provider setup (optional)"
 echo "WhatsApp (QR):"

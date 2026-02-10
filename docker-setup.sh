@@ -170,6 +170,35 @@ upsert_env "$ENV_FILE" \
   OPENCLAW_HOME_VOLUME \
   OPENCLAW_DOCKER_APT_PACKAGES
 
+# Write gateway configuration file
+OPENCLAW_CONFIG_FILE="$OPENCLAW_CONFIG_DIR/openclaw.json"
+if [[ ! -f "$OPENCLAW_CONFIG_FILE" ]]; then
+  echo "==> Creating gateway configuration: $OPENCLAW_CONFIG_FILE"
+  cat >"$OPENCLAW_CONFIG_FILE" <<CONFIG_EOF
+{
+  "gateway": {
+    "bind": "${OPENCLAW_GATEWAY_BIND:-lan}",
+    "auth": {
+      "mode": "token",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+    },
+    "controlUi": {
+      "dangerouslyDisableDeviceAuth": true
+    }
+  }
+}
+CONFIG_EOF
+else
+  # Update existing config to ensure gateway auth token is set
+  echo "==> Updating gateway token in existing config: $OPENCLAW_CONFIG_FILE"
+  # Check if the config already has the auth section
+  if ! grep -q '"auth"' "$OPENCLAW_CONFIG_FILE"; then
+    # Simple update: insert auth section after bind line
+    sed -i.bak 's/"bind": "[^"]*"/"bind": "'${OPENCLAW_GATEWAY_BIND:-lan}'",\n    "auth": {\n      "mode": "token",\n      "token": "'${OPENCLAW_GATEWAY_TOKEN}'"\n    }/' "$OPENCLAW_CONFIG_FILE"
+    rm -f "$OPENCLAW_CONFIG_FILE.bak"
+  fi
+fi
+
 echo "==> Building Docker image: $IMAGE_NAME"
 docker build \
   --build-arg "OPENCLAW_DOCKER_APT_PACKAGES=${OPENCLAW_DOCKER_APT_PACKAGES}" \
@@ -203,9 +232,12 @@ echo "==> Starting gateway"
 docker compose "${COMPOSE_ARGS[@]}" up -d openclaw-gateway
 
 echo ""
-echo "Gateway running with host port mapping."
-echo "Access from tailnet devices via the host's tailnet IP."
-echo "Config: $OPENCLAW_CONFIG_DIR"
+echo "Gateway is running!"
+echo ""
+echo "Access the web UI:"
+echo "  http://127.0.0.1:${OPENCLAW_GATEWAY_PORT}"
+echo ""
+echo "Config: $OPENCLAW_CONFIG_FILE"
 echo "Workspace: $OPENCLAW_WORKSPACE_DIR"
 echo "Token: $OPENCLAW_GATEWAY_TOKEN"
 echo ""

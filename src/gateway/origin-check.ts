@@ -59,6 +59,13 @@ export function checkBrowserOrigin(params: {
   origin?: string;
   allowedOrigins?: string[];
 }): OriginCheckResult {
+  // Check for vscode-webview origins BEFORE URL parsing since vscode-webview://
+  // might not be recognized as a valid protocol by new URL()
+  const originRaw = (params.origin ?? "").trim().toLowerCase();
+  if (originRaw.startsWith("vscode-webview://")) {
+    return { ok: true };
+  }
+
   const parsedOrigin = parseOrigin(params.origin);
   if (!parsedOrigin) {
     return { ok: false, reason: "origin missing or invalid" };

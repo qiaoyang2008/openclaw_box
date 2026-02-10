@@ -283,13 +283,21 @@
   display: none;
 }
 
+/* Textarea wrapper for positioning copy button */
+.chat-compose__textarea-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
 /* Override .field textarea min-height (180px) from components.css */
 .chat-compose .chat-compose__field textarea {
   width: 100%;
   height: 40px;
   min-height: 40px;
   max-height: 150px;
-  padding: 9px 12px;
+  padding: 9px 40px 9px 12px;
   border-radius: 8px;
   overflow-y: auto;
   resize: none;
@@ -302,6 +310,60 @@
 .chat-compose__field textarea:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+/* Copy button positioned inside textarea */
+.chat-compose__copy-btn {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  border: none;
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition:
+    opacity 150ms ease-out,
+    background 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.chat-compose__copy-btn:hover {
+  opacity: 1;
+  background: var(--panel-strong);
+  color: var(--text);
+}
+
+.chat-compose__copy-btn--copied {
+  color: var(--success, #10b981);
+}
+
+.chat-compose__copy-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Light theme copy button overrides */
+:root[data-theme="light"] .chat-compose__copy-btn {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--muted);
+}
+
+:root[data-theme="light"] .chat-compose__copy-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text);
 }
 
 .chat-compose__actions {

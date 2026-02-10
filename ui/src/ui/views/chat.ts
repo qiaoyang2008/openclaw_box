@@ -372,36 +372,70 @@ export function renderChat(props: ChatProps) {
         <div class="chat-compose__row">
           <label class="field chat-compose__field">
             <span>Message</span>
-            <textarea
-              ${ref((el) => el && adjustTextareaHeight(el as HTMLTextAreaElement))}
-              .value=${props.draft}
-              ?disabled=${!props.connected}
-              @keydown=${(e: KeyboardEvent) => {
-                if (e.key !== "Enter") {
-                  return;
-                }
-                if (e.isComposing || e.keyCode === 229) {
-                  return;
-                }
-                if (e.shiftKey) {
-                  return;
-                } // Allow Shift+Enter for line breaks
-                if (!props.connected) {
-                  return;
-                }
-                e.preventDefault();
-                if (canCompose) {
-                  props.onSend();
-                }
-              }}
-              @input=${(e: Event) => {
-                const target = e.target as HTMLTextAreaElement;
-                adjustTextareaHeight(target);
-                props.onDraftChange(target.value);
-              }}
-              @paste=${(e: ClipboardEvent) => handlePaste(e, props)}
-              placeholder=${composePlaceholder}
-            ></textarea>
+            <div class="chat-compose__textarea-wrapper">
+              <textarea
+                ${ref((el) => el && adjustTextareaHeight(el as HTMLTextAreaElement))}
+                .value=${props.draft}
+                ?disabled=${!props.connected}
+                @keydown=${(e: KeyboardEvent) => {
+                  if (e.key !== "Enter") {
+                    return;
+                  }
+                  if (e.isComposing || e.keyCode === 229) {
+                    return;
+                  }
+                  if (e.shiftKey) {
+                    return;
+                  } // Allow Shift+Enter for line breaks
+                  if (!props.connected) {
+                    return;
+                  }
+                  e.preventDefault();
+                  if (canCompose) {
+                    props.onSend();
+                  }
+                }}
+                @input=${(e: Event) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  adjustTextareaHeight(target);
+                  props.onDraftChange(target.value);
+                }}
+                @paste=${(e: ClipboardEvent) => handlePaste(e, props)}
+                placeholder=${composePlaceholder}
+              ></textarea>
+              ${
+                props.draft
+                  ? html`
+                    <button
+                      class="chat-compose__copy-btn"
+                      type="button"
+                      aria-label="Copy message text"
+                      title="Copy message text"
+                      @click=${async () => {
+                        try {
+                          await navigator.clipboard.writeText(props.draft);
+                          // Visual feedback: briefly change the button appearance
+                          const btn = event?.target as HTMLButtonElement;
+                          if (btn) {
+                            const originalContent = btn.innerHTML;
+                            btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></svg>';
+                            btn.classList.add("chat-compose__copy-btn--copied");
+                            setTimeout(() => {
+                              btn.innerHTML = originalContent;
+                              btn.classList.remove("chat-compose__copy-btn--copied");
+                            }, 1500);
+                          }
+                        } catch (err) {
+                          console.error("Failed to copy text:", err);
+                        }
+                      }}
+                    >
+                      ${icons.copy}
+                    </button>
+                  `
+                  : nothing
+              }
+            </div>
           </label>
           <div class="chat-compose__actions">
             <button

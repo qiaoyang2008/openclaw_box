@@ -88,7 +88,26 @@ export function renderChatControls(state: AppViewState) {
     <div class="chat-controls">
       <button
         class="btn btn--sm"
-        @click=${() => (state as unknown as OpenClawApp).handleSendChat("/new", { restoreDraft: true })}
+        @click=${async () => {
+          const app = state as unknown as OpenClawApp;
+          await app.handleSendChat("/new", { restoreDraft: true });
+          // Refresh the UI after creating new session
+          app.chatManualRefreshInFlight = true;
+          app.chatNewMessagesBelow = false;
+          await app.updateComplete;
+          app.resetToolStream();
+          try {
+            await refreshChat(state as unknown as Parameters<typeof refreshChat>[0], {
+              scheduleScroll: false,
+            });
+            app.scrollToBottom({ smooth: true });
+          } finally {
+            requestAnimationFrame(() => {
+              app.chatManualRefreshInFlight = false;
+              app.chatNewMessagesBelow = false;
+            });
+          }
+        }}
       >
         New session
       </button>

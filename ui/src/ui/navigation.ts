@@ -176,7 +176,7 @@ export function titleForTab(tab: Tab) {
     case "nodes":
       return "Nodes";
     case "chat":
-      return "Chat";
+      return "Chatbox";
     case "config":
       return "Config";
     case "debug":
@@ -209,7 +209,7 @@ export function subtitleForTab(tab: Tab) {
     case "nodes":
       return "Paired devices, capabilities, and command exposure.";
     case "chat":
-      return "Direct gateway chat session for quick interventions.";
+      return "";
     case "config":
       return "Edit ~/.openclaw/openclaw.json safely.";
     case "debug":

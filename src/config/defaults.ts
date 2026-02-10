@@ -465,6 +465,42 @@ export function applyCompactionDefaults(cfg: OpenClawConfig): OpenClawConfig {
   };
 }
 
+export function applyBrowserDefaults(cfg: OpenClawConfig): OpenClawConfig {
+  // Enable browser by default if not explicitly configured
+  const browser = cfg.browser;
+
+  // If browser is explicitly disabled, respect that
+  if (browser?.enabled === false) {
+    return cfg;
+  }
+
+  // If browser config exists and is enabled, check if chrome profile exists
+  const hasChromeProfile = browser?.profiles?.chrome !== undefined;
+
+  // If already configured, return as-is
+  if (browser?.enabled && hasChromeProfile) {
+    return cfg;
+  }
+
+  // Apply default browser configuration with Chrome extension profile
+  const nextBrowser = {
+    enabled: true,
+    profiles: {
+      ...browser?.profiles,
+      chrome: browser?.profiles?.chrome ?? {
+        driver: "extension" as const,
+        cdpUrl: "http://127.0.0.1:18792",
+        color: "#00AA00",
+      },
+    },
+  };
+
+  return {
+    ...cfg,
+    browser: nextBrowser,
+  };
+}
+
 export function resetSessionDefaultsWarningForTests() {
   defaultWarnState = { warned: false };
 }

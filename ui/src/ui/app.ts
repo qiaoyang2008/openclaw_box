@@ -343,6 +343,7 @@ export class OpenClawApp extends LitElement {
   private themeMedia: MediaQueryList | null = null;
   private themeMediaHandler: ((event: MediaQueryListEvent) => void) | null = null;
   private topbarObserver: ResizeObserver | null = null;
+  vscodeMessageHandler?: (event: MessageEvent) => void;
 
   createRenderRoot() {
     return this;

@@ -287,6 +287,26 @@ async function connectOrToggleForActiveTab() {
   const tabId = active?.id
   if (!tabId) return
 
+  // Check if URL is attachable (reject chrome://, chrome-extension://, about:, etc.)
+  const url = active?.url || ''
+  const isRestrictedUrl =
+    url.startsWith('chrome://') ||
+    url.startsWith('chrome-extension://') ||
+    url.startsWith('about:') ||
+    url.startsWith('edge://') ||
+    url.startsWith('devtools://') ||
+    url === ''
+
+  if (isRestrictedUrl) {
+    setBadge(tabId, 'error')
+    void chrome.action.setTitle({
+      tabId,
+      title: 'OpenClaw Browser Relay: Cannot attach to this type of page (chrome://, about:, etc.)',
+    })
+    console.warn('Cannot attach to restricted URL:', url)
+    return
+  }
+
   const existing = tabs.get(tabId)
   if (existing?.state === 'connected') {
     await detachTab(tabId, 'toggle')

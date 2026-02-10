@@ -130,6 +130,17 @@ function isLoopbackAddress(ip: string | undefined): boolean {
   if (ip.startsWith("::ffff:127.")) {
     return true;
   }
+  // Allow private network connections when running in Docker container
+  // (Docker host gateway typically uses 192.168.65.1, 172.17.0.1, or similar)
+  if (process.env.DOCKER_CONTAINER === "true") {
+    if (ip.startsWith("192.168.") || ip.startsWith("172.") || ip.startsWith("10.")) {
+      return true;
+    }
+    // Docker bridge network IPv4-mapped IPv6
+    if (ip.startsWith("::ffff:192.168.") || ip.startsWith("::ffff:172.") || ip.startsWith("::ffff:10.")) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -362,6 +373,7 @@ export async function ensureChromeExtensionRelayServer(opts: {
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", info.baseUrl);
     const path = url.pathname;
+    console.log(`[relay] HTTP ${req.method} ${path} from ${req.socket.remoteAddress}`);
 
     if (path.startsWith("/json")) {
       const token = getHeader(req, RELAY_AUTH_HEADER);
@@ -373,13 +385,19 @@ export async function ensureChromeExtensionRelayServer(opts: {
     }
 
     if (req.method === "HEAD" && path === "/") {
-      res.writeHead(200);
+      res.writeHead(200, {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+      });
       res.end();
       return;
     }
 
     if (path === "/") {
-      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+      res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Access-Control-Allow-Origin": "*",
+      });
       res.end("OK");
       return;
     }
@@ -487,22 +505,31 @@ export async function ensureChromeExtensionRelayServer(opts: {
     const pathname = url.pathname;
     const remote = req.socket.remoteAddress;
 
-    if (!isLoopbackAddress(remote)) {
-      rejectUpgrade(socket, 403, "Forbidden");
+    console.log(`[relay] WebSocket upgrade request: path=${pathname}, remote=${remote}, origin=${req.headers.origin}`);
+
+    // In Docker, skip security checks since port is only accessible via Docker port mapping
+    const inDocker = process.env.DOCKER_CONTAINER === "true";
+
+    if (!inDocker && !isLoopbackAddress(remote)) {
+      console.log(`[relay] Rejecting connection from non-loopback address: ${remote}`);
+      rejectUpgrade(socket, 403, `Forbidden: remote=${remote}`);
       return;
     }
 
     const origin = headerValue(req.headers.origin);
-    if (origin && !origin.startsWith("chrome-extension://")) {
-      rejectUpgrade(socket, 403, "Forbidden: invalid origin");
+    if (!inDocker && origin && !origin.startsWith("chrome-extension://")) {
+      console.log(`[relay] Rejecting connection with invalid origin: ${origin}`);
+      rejectUpgrade(socket, 403, `Forbidden: invalid origin ${origin}`);
       return;
     }
 
     if (pathname === "/extension") {
       if (extensionWs) {
+        console.log(`[relay] Rejecting duplicate extension connection`);
         rejectUpgrade(socket, 409, "Extension already connected");
         return;
       }
+      console.log(`[relay] Accepting extension WebSocket connection from ${remote}`);
       wssExtension.handleUpgrade(req, socket, head, (ws) => {
         wssExtension.emit("connection", ws, req);
       });
@@ -734,8 +761,14 @@ export async function ensureChromeExtensionRelayServer(opts: {
     });
   });
 
+  // Bind to 0.0.0.0 in Docker containers to allow host access,
+  // otherwise use the configured host (usually 127.0.0.1).
+  const bindHost = info.host === "127.0.0.1" && process.env.DOCKER_CONTAINER === "true"
+    ? "0.0.0.0"
+    : info.host;
+
   await new Promise<void>((resolve, reject) => {
-    server.listen(info.port, info.host, () => resolve());
+    server.listen(info.port, bindHost, () => resolve());
     server.once("error", reject);
   });
 

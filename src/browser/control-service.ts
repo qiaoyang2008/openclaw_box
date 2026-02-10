@@ -40,9 +40,11 @@ export async function startBrowserControlServiceFromConfig(): Promise<BrowserSer
   // so the extension can connect before the first browser action.
   for (const name of Object.keys(resolved.profiles)) {
     const profile = resolveProfile(resolved, name);
+    logService.info(`Checking profile "${name}": driver=${profile?.driver}, cdpUrl=${profile?.cdpUrl}`);
     if (!profile || profile.driver !== "extension") {
       continue;
     }
+    logService.info(`Starting relay server for profile "${name}" at ${profile.cdpUrl}`);
     await ensureChromeExtensionRelayServer({ cdpUrl: profile.cdpUrl }).catch((err) => {
       logService.warn(`Chrome extension relay init failed for profile "${name}": ${String(err)}`);
     });

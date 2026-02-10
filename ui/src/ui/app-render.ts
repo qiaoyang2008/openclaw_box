@@ -132,13 +132,13 @@ export function renderApp(state: AppViewState) {
           >
             <span class="nav-collapse-toggle__icon">${icons.menu}</span>
           </button>
-        </div>
-        <div class="topbar-status">
           <div class="pill">
             <span class="statusDot ${state.connected ? "ok" : ""}"></span>
             <span>Health</span>
             <span class="mono">${state.connected ? "OK" : "Offline"}</span>
           </div>
+        </div>
+        <div class="topbar-status">
           ${renderThemeToggle(state)}
         </div>
       </header>

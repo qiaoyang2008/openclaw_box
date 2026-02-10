@@ -2,6 +2,7 @@ export const WEBVIEW_TYPE = "openclaw.controlUI";
 
 export const COMMANDS = {
   OPEN_CONTROL_UI: "openclaw.openControlUI",
+  OPEN_TASK_UI: "openclaw.openTaskUI",
   REFRESH_CONTROL_UI: "openclaw.refreshControlUI",
   CONNECT: "openclaw.connect",
   DISCONNECT: "openclaw.disconnect",
@@ -18,6 +19,7 @@ export const SETTINGS = {
   THEME: "openclaw.theme",
   CONTROL_UI_PATH: "openclaw.controlUiPath",
   AUTO_CONNECT: "openclaw.autoConnect",
+  UI_MODE: "openclaw.uiMode",
 } as const;
 
 export const TABS = [

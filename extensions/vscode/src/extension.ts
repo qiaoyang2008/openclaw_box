@@ -14,7 +14,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(COMMANDS.OPEN_CONTROL_UI, () => {
-      provider!.openOrReveal();
+      provider!.openOrReveal("full");
+    }),
+
+    vscode.commands.registerCommand(COMMANDS.OPEN_TASK_UI, () => {
+      provider!.openOrReveal("task");
     }),
 
     vscode.commands.registerCommand(COMMANDS.REFRESH_CONTROL_UI, () => {
@@ -22,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
     }),
 
     vscode.commands.registerCommand(COMMANDS.CONNECT, () => {
-      provider!.openOrReveal();
+      provider!.openOrReveal("full");
       provider!.syncSettingsToWebview();
     }),
 
@@ -40,23 +44,23 @@ export function activate(context: vscode.ExtensionContext) {
         placeHolder: "Select a tab",
       });
       if (picked) {
-        provider!.openOrReveal();
+        provider!.openOrReveal("full");
         provider!.navigateToTab(picked.tab as Tab);
       }
     }),
 
     vscode.commands.registerCommand(COMMANDS.SHOW_CHAT, () => {
-      provider!.openOrReveal();
+      provider!.openOrReveal("full");
       provider!.navigateToTab("chat");
     }),
 
     vscode.commands.registerCommand(COMMANDS.SHOW_OVERVIEW, () => {
-      provider!.openOrReveal();
+      provider!.openOrReveal("full");
       provider!.navigateToTab("overview");
     }),
 
     vscode.commands.registerCommand(COMMANDS.SHOW_LOGS, () => {
-      provider!.openOrReveal();
+      provider!.openOrReveal("full");
       provider!.navigateToTab("logs");
     }),
   );

@@ -50,6 +50,10 @@
       {
         "command": "openclaw.showLogs",
         "title": "OpenClaw: Open Logs"
+      },
+      {
+        "command": "openclaw.openTaskUI",
+        "title": "OpenClaw: Open Task UI (Chat Only)"
       }
     ],
     "configuration": {
@@ -89,6 +93,15 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically connect to the gateway when the Control UI opens"
+        },
+        "openclaw.uiMode": {
+          "type": "string",
+          "enum": [
+            "full",
+            "task"
+          ],
+          "default": "full",
+          "description": "UI mode: 'full' shows all tabs, 'task' shows only Chat"
         }
       }
     },
@@ -97,6 +110,11 @@
         "command": "openclaw.openControlUI",
         "key": "ctrl+shift+o",
         "mac": "cmd+shift+o"
+      },
+      {
+        "command": "openclaw.openTaskUI",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t"
       },
       {
         "command": "openclaw.refreshControlUI",

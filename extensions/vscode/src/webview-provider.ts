@@ -7,25 +7,31 @@ import type { StatusBarManager } from "./status-bar";
 export class ControlUIWebviewProvider implements vscode.Disposable {
   private panel: vscode.WebviewPanel | undefined;
   private disposables: vscode.Disposable[] = [];
+  private uiMode: "full" | "task" = "full";
 
   constructor(
     private context: vscode.ExtensionContext,
     private statusBar: StatusBarManager,
   ) {}
 
-  openOrReveal() {
-    console.log("[OpenClaw] openOrReveal called");
+  openOrReveal(mode: "full" | "task" = "full") {
+    this.uiMode = mode;
+    console.log("[OpenClaw] openOrReveal called, mode:", mode);
     if (this.panel) {
       this.panel.reveal(vscode.ViewColumn.One);
+      // Update HTML if mode changed
+      const controlUiUri = this.resolveControlUiUri();
+      this.panel.webview.html = this.buildHtml(this.panel.webview, controlUiUri);
       return;
     }
 
     const controlUiUri = this.resolveControlUiUri();
     console.log("[OpenClaw] Control UI path:", controlUiUri.fsPath);
 
+    const title = mode === "task" ? "SmartAgent" : "OpenClaw Control";
     this.panel = vscode.window.createWebviewPanel(
       WEBVIEW_TYPE,
-      "OpenClaw Control",
+      title,
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -182,7 +188,7 @@ export class ControlUIWebviewProvider implements vscode.Disposable {
     // Simple window globals injection (no IIFE, no complex logic)
     const simpleGlobals = `<script nonce="${nonce}">
       window.__OPENCLAW_CONTROL_UI_BASE_PATH__ = "";
-      window.__OPENCLAW_ASSISTANT_NAME__ = "OpenClaw";
+      window.__OPENCLAW_ASSISTANT_NAME__ = "${this.uiMode === "task" ? "SmartAgent" : "OpenClaw"}";
       window.__OPENCLAW_ASSISTANT_AVATAR__ = null;
 
       localStorage.setItem("openclaw.control.settings.v1", JSON.stringify({
@@ -194,6 +200,48 @@ export class ControlUIWebviewProvider implements vscode.Disposable {
       }));
     </script>`;
 
+    // Inject UI mode as data attribute for CSS targeting
+    const uiModeAttr = `<script nonce="${nonce}">
+      document.addEventListener('DOMContentLoaded', () => {
+        document.body.setAttribute('data-ui-mode', '${this.uiMode}');
+      });
+    </script>`;
+
+    const taskModeCSS = `
+    <style nonce="${nonce}">
+      /* Hide navigation elements only in task mode */
+      body[data-ui-mode="task"] nav,
+      body[data-ui-mode="task"] [role="navigation"],
+      body[data-ui-mode="task"] .nav,
+      body[data-ui-mode="task"] .navigation,
+      body[data-ui-mode="task"] .sidebar,
+      body[data-ui-mode="task"] .menu-panel,
+      body[data-ui-mode="task"] openclaw-control > div > nav,
+      body[data-ui-mode="task"] openclaw-control nav,
+      body[data-ui-mode="task"] [class*="nav"],
+      body[data-ui-mode="task"] [class*="sidebar"],
+      body[data-ui-mode="task"] [class*="menu"] {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+      }
+
+      /* Adjust main content to take full width in task mode */
+      body[data-ui-mode="task"] main,
+      body[data-ui-mode="task"] .main-content,
+      body[data-ui-mode="task"] [role="main"] {
+        margin-left: 0 !important;
+        width: 100% !important;
+      }
+
+      /* Handle shadow DOM navigation in task mode */
+      body[data-ui-mode="task"] openclaw-control::part(nav),
+      body[data-ui-mode="task"] openclaw-control::part(navigation) {
+        display: none !important;
+      }
+    </style>
+    `;
+
     const headClose = html.indexOf("</head>");
     if (headClose !== -1) {
       html =
@@ -202,8 +250,12 @@ export class ControlUIWebviewProvider implements vscode.Disposable {
         "\n" +
         simpleGlobals +
         "\n" +
+        uiModeAttr +
+        "\n" +
+        taskModeCSS +
+        "\n" +
         html.slice(headClose);
-      console.log("[OpenClaw] Injected CSP and simple globals into HTML");
+      console.log("[OpenClaw] Injected CSP and simple globals into HTML, mode:", this.uiMode);
     } else {
       console.log("[OpenClaw] WARNING: </head> not found in HTML!");
     }

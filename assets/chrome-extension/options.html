@@ -149,6 +149,14 @@
       .status[data-kind='error'] {
         color: color-mix(in oklab, #ef4444 75%, canvasText 25%);
       }
+      input[type='checkbox'] {
+        width: auto;
+        margin-right: 6px;
+        cursor: pointer;
+      }
+      input[type='password'] {
+        font-family: ui-monospace, Menlo, monospace;
+      }
     </style>
   </head>
   <body>
@@ -187,6 +195,42 @@
             Only change this if your OpenClaw profile uses a different <code>cdpUrl</code> port.
           </div>
           <div class="status" id="status"></div>
+        </div>
+
+        <div class="card">
+          <h2>Canvas Node (NEW)</h2>
+          <p>
+            Enable canvas node to pair this browser with your OpenClaw Gateway.
+            The agent can display images, render A2UI content, and control the browser canvas.
+          </p>
+          <div style="margin-top: 12px;">
+            <label>
+              <input type="checkbox" id="canvas-enabled" checked />
+              Enable Canvas Node
+            </label>
+          </div>
+          <div style="margin-top: 12px;">
+            <label for="gateway-port">Gateway Port</label>
+            <div class="row">
+              <input id="gateway-port" inputmode="numeric" pattern="[0-9]*" />
+            </div>
+            <div class="hint">
+              Default: <code>18789</code>. Gateway WebSocket endpoint: <code>ws://127.0.0.1:&lt;port&gt;</code>.
+            </div>
+          </div>
+          <div style="margin-top: 12px;">
+            <label for="gateway-token">Gateway Token (optional)</label>
+            <div class="row">
+              <input id="gateway-token" type="password" placeholder="Optional auth token" style="width: 300px;" />
+            </div>
+            <div class="hint">
+              Leave empty if your Gateway doesn't require authentication.
+            </div>
+          </div>
+          <div style="margin-top: 12px;">
+            <button id="save-canvas" type="button">Save Canvas Settings</button>
+          </div>
+          <div class="status" id="canvas-status"></div>
         </div>
       </div>
 

@@ -505,6 +505,7 @@ export const OpenClawSchema = z
               .optional(),
             allowCommands: z.array(z.string()).optional(),
             denyCommands: z.array(z.string()).optional(),
+            dangerouslyAllowLocalWithoutAuth: z.boolean().optional(),
           })
           .strict()
           .optional(),

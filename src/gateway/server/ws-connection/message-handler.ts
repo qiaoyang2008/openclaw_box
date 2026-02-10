@@ -467,7 +467,24 @@ export function attachGatewayWsMessageHandler(params: {
           close(1008, truncateCloseReason(authMessage));
         };
         if (!device) {
-          const canSkipDevice = sharedAuthOk;
+          // Check if local nodes can skip authentication (dev mode)
+          const allowLocalNodesWithoutAuth =
+            role === "node" &&
+            isLocalClient &&
+            configSnapshot.gateway?.nodes?.dangerouslyAllowLocalWithoutAuth === true;
+          const canSkipDevice = sharedAuthOk || allowLocalNodesWithoutAuth;
+
+          // Debug logging for auto-approval
+          console.log("[DEBUG] Auto-approval check:", {
+            role,
+            isLocalClient,
+            dangerouslyAllowLocalWithoutAuth:
+              configSnapshot.gateway?.nodes?.dangerouslyAllowLocalWithoutAuth,
+            sharedAuthOk,
+            allowLocalNodesWithoutAuth,
+            canSkipDevice,
+            clientId: connectParams.client.id,
+          });
 
           if (isControlUi && !allowControlUiBypass) {
             const errorMessage = "control ui requires HTTPS or localhost (secure context)";

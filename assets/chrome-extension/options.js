@@ -1,4 +1,5 @@
 const DEFAULT_PORT = 18792
+const DEFAULT_GATEWAY_PORT = 18789
 
 function clampPort(value) {
   const n = Number.parseInt(String(value || ''), 10)
@@ -55,5 +56,62 @@ async function save() {
   await checkRelayReachable(port)
 }
 
+// Canvas node configuration
+function clampGatewayPort(value) {
+  const n = Number.parseInt(String(value || ''), 10)
+  if (!Number.isFinite(n)) return DEFAULT_GATEWAY_PORT
+  if (n <= 0 || n > 65535) return DEFAULT_GATEWAY_PORT
+  return n
+}
+
+function setCanvasStatus(kind, message) {
+  const status = document.getElementById('canvas-status')
+  if (!status) return
+  status.dataset.kind = kind || ''
+  status.textContent = message || ''
+}
+
+async function loadCanvas() {
+  const stored = await chrome.storage.local.get([
+    'gatewayPort',
+    'gatewayToken',
+    'canvasNodeEnabled',
+  ])
+  const gatewayPort = clampGatewayPort(stored.gatewayPort)
+  const gatewayToken = stored.gatewayToken || ''
+  const canvasEnabled = stored.canvasNodeEnabled !== false
+
+  document.getElementById('gateway-port').value = String(gatewayPort)
+  document.getElementById('gateway-token').value = gatewayToken
+  document.getElementById('canvas-enabled').checked = canvasEnabled
+}
+
+async function saveCanvas() {
+  const gatewayPortInput = document.getElementById('gateway-port')
+  const gatewayTokenInput = document.getElementById('gateway-token')
+  const canvasEnabledInput = document.getElementById('canvas-enabled')
+
+  const gatewayPort = clampGatewayPort(gatewayPortInput.value)
+  const gatewayToken = gatewayTokenInput.value.trim()
+  const canvasEnabled = canvasEnabledInput.checked
+
+  await chrome.storage.local.set({
+    gatewayPort,
+    gatewayToken: gatewayToken || null,
+    canvasNodeEnabled: canvasEnabled,
+  })
+
+  gatewayPortInput.value = String(gatewayPort)
+  setCanvasStatus('ok', 'Canvas settings saved. Reconnecting to Gateway...')
+
+  // Trigger reconnection by sending message to background
+  setTimeout(() => {
+    setCanvasStatus('', '')
+  }, 2000)
+}
+
 document.getElementById('save').addEventListener('click', () => void save())
+document.getElementById('save-canvas').addEventListener('click', () => void saveCanvas())
+
 void load()
+void loadCanvas()

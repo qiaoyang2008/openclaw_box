@@ -1,3 +1,7 @@
+// Import canvas node module (static import for service worker compatibility)
+console.log('[Background] LOADED VERSION: 0.1.1 - 2026-02-10')
+import './canvas-node.js'
+
 const DEFAULT_PORT = 18792
 
 const BADGE = {

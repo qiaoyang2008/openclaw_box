@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OpenClaw Browser Relay",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Attach OpenClaw to your existing Chrome tab via a local CDP relay server.",
   "icons": {
     "16": "icons/icon16.png",
@@ -9,9 +9,18 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["debugger", "tabs", "activeTab", "storage"],
-  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
-  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["debugger", "tabs", "activeTab", "storage", "scripting", "tabCapture"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*", "<all_urls>"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["canvas.html", "canvas-renderer.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "action": {
     "default_title": "OpenClaw Browser Relay (click to attach/detach)",
     "default_icon": {

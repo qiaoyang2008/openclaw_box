@@ -209,6 +209,13 @@ export type GatewayNodesConfig = {
   allowCommands?: string[];
   /** Commands to deny even if they appear in the defaults or node claims. */
   denyCommands?: string[];
+  /**
+   * DEVELOPMENT ONLY: Auto-approve node connections from localhost without requiring
+   * authentication. This bypasses the normal device identity and token requirements.
+   * WARNING: Only enable this in development environments.
+   * Default: false
+   */
+  dangerouslyAllowLocalWithoutAuth?: boolean;
 };
 
 export type GatewayConfig = {

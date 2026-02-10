@@ -23,6 +23,11 @@
         "title": "OpenClaw: Open Control UI"
       },
       {
+        "command": "openclaw.refreshControlUI",
+        "title": "OpenClaw: Refresh Control UI",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "openclaw.connect",
         "title": "OpenClaw: Connect to Gateway"
       },
@@ -92,6 +97,12 @@
         "command": "openclaw.openControlUI",
         "key": "ctrl+shift+o",
         "mac": "cmd+shift+o"
+      },
+      {
+        "command": "openclaw.refreshControlUI",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "activeWebviewPanelId == 'openclaw.controlUI'"
       }
     ]
   },

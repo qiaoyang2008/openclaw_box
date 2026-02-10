@@ -70,6 +70,17 @@ export class ControlUIWebviewProvider implements vscode.Disposable {
     });
   }
 
+  refresh() {
+    if (!this.panel) {
+      this.openOrReveal();
+      return;
+    }
+    console.log("[OpenClaw] Refreshing Control UI...");
+    const controlUiUri = this.resolveControlUiUri();
+    this.panel.webview.html = this.buildHtml(this.panel.webview, controlUiUri);
+    vscode.window.showInformationMessage("OpenClaw Control UI refreshed");
+  }
+
   dispose() {
     this.panel?.dispose();
     for (const d of this.disposables) {

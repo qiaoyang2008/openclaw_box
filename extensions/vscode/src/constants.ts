@@ -2,6 +2,7 @@ export const WEBVIEW_TYPE = "openclaw.controlUI";
 
 export const COMMANDS = {
   OPEN_CONTROL_UI: "openclaw.openControlUI",
+  REFRESH_CONTROL_UI: "openclaw.refreshControlUI",
   CONNECT: "openclaw.connect",
   DISCONNECT: "openclaw.disconnect",
   NAVIGATE_TAB: "openclaw.navigateTab",

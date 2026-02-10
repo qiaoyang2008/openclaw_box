@@ -17,6 +17,10 @@ export function activate(context: vscode.ExtensionContext) {
       provider!.openOrReveal();
     }),
 
+    vscode.commands.registerCommand(COMMANDS.REFRESH_CONTROL_UI, () => {
+      provider!.refresh();
+    }),
+
     vscode.commands.registerCommand(COMMANDS.CONNECT, () => {
       provider!.openOrReveal();
       provider!.syncSettingsToWebview();

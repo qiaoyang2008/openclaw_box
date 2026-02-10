@@ -5,7 +5,7 @@
 .shell {
   --shell-pad: 16px;
   --shell-gap: 16px;
-  --shell-nav-width: 220px;
+  --shell-nav-width: 160px;
   --shell-topbar-height: 56px;
   --shell-focus-duration: 200ms;
   --shell-focus-ease: var(--ease-out);
@@ -441,6 +441,8 @@
   gap: 24px;
   overflow: hidden;
   padding-bottom: 0;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .content--chat > * + * {

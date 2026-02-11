@@ -182,6 +182,33 @@ describe("chrome extension relay server", () => {
     expect(err.message).toContain("401");
   });
 
+  it("normalizes host.docker.internal to 127.0.0.1 when DOCKER_CONTAINER=true", async () => {
+    const port = await getFreePort();
+    const dockerCdpUrl = `http://host.docker.internal:${port}`;
+
+    // Set Docker environment variable
+    const originalEnv = process.env.DOCKER_CONTAINER;
+    process.env.DOCKER_CONTAINER = "true";
+
+    try {
+      // Should succeed because host.docker.internal gets normalized to 127.0.0.1
+      cdpUrl = dockerCdpUrl;
+      await ensureChromeExtensionRelayServer({ cdpUrl: dockerCdpUrl });
+
+      // Verify server is running by checking it responds
+      const normalizedUrl = `http://127.0.0.1:${port}`;
+      const res = await fetch(normalizedUrl);
+      expect(res.status).toBe(200);
+    } finally {
+      // Restore original environment
+      if (originalEnv !== undefined) {
+        process.env.DOCKER_CONTAINER = originalEnv;
+      } else {
+        delete process.env.DOCKER_CONTAINER;
+      }
+    }
+  });
+
   it("tracks attached page targets and exposes them via CDP + /json/list", async () => {
     const port = await getFreePort();
     cdpUrl = `http://127.0.0.1:${port}`;

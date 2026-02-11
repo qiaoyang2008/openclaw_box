@@ -17,6 +17,7 @@ Docs: https://docs.openclaw.ai
 
 ### Fixes
 
+- Browser/Docker: fix Chrome extension relay server startup in Docker by automatically normalizing `host.docker.internal` to `127.0.0.1` when `DOCKER_CONTAINER=true`. The relay server now correctly starts on `127.0.0.1:18792` inside Docker containers (binding to `0.0.0.0` for host accessibility), allowing the Chrome extension to connect from the host machine via port mapping.
 - WhatsApp: preserve original filenames for inbound documents. (#12691) Thanks @akramcodez.
 - Telegram: harden quote parsing; preserve quote context; avoid QUOTE_TEXT_INVALID; avoid nested reply quote misclassification. (#12156) Thanks @rybnikov.
 - Telegram: recover proactive sends when stale topic thread IDs are used by retrying without `message_thread_id`. (#11620)

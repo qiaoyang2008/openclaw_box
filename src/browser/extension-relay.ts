@@ -137,7 +137,11 @@ function isLoopbackAddress(ip: string | undefined): boolean {
       return true;
     }
     // Docker bridge network IPv4-mapped IPv6
-    if (ip.startsWith("::ffff:192.168.") || ip.startsWith("::ffff:172.") || ip.startsWith("::ffff:10.")) {
+    if (
+      ip.startsWith("::ffff:192.168.") ||
+      ip.startsWith("::ffff:172.") ||
+      ip.startsWith("::ffff:10.")
+    ) {
       return true;
     }
   }
@@ -219,7 +223,15 @@ export function getChromeExtensionRelayAuthHeaders(url: string): Record<string, 
 export async function ensureChromeExtensionRelayServer(opts: {
   cdpUrl: string;
 }): Promise<ChromeExtensionRelayServer> {
-  const info = parseBaseUrl(opts.cdpUrl);
+  // In Docker, normalize host.docker.internal to 127.0.0.1
+  // The relay server will bind to 0.0.0.0 anyway (see bindHost below),
+  // making it accessible from the host via port mapping
+  let cdpUrl = opts.cdpUrl;
+  if (process.env.DOCKER_CONTAINER === "true" && cdpUrl.includes("host.docker.internal")) {
+    cdpUrl = cdpUrl.replace(/host\.docker\.internal/g, "127.0.0.1");
+  }
+
+  const info = parseBaseUrl(cdpUrl);
   if (!isLoopbackHost(info.host)) {
     throw new Error(`extension relay requires loopback cdpUrl host (got ${info.host})`);
   }
@@ -505,7 +517,9 @@ export async function ensureChromeExtensionRelayServer(opts: {
     const pathname = url.pathname;
     const remote = req.socket.remoteAddress;
 
-    console.log(`[relay] WebSocket upgrade request: path=${pathname}, remote=${remote}, origin=${req.headers.origin}`);
+    console.log(
+      `[relay] WebSocket upgrade request: path=${pathname}, remote=${remote}, origin=${req.headers.origin}`,
+    );
 
     // In Docker, skip security checks since port is only accessible via Docker port mapping
     const inDocker = process.env.DOCKER_CONTAINER === "true";
@@ -763,9 +777,8 @@ export async function ensureChromeExtensionRelayServer(opts: {
 
   // Bind to 0.0.0.0 in Docker containers to allow host access,
   // otherwise use the configured host (usually 127.0.0.1).
-  const bindHost = info.host === "127.0.0.1" && process.env.DOCKER_CONTAINER === "true"
-    ? "0.0.0.0"
-    : info.host;
+  const bindHost =
+    info.host === "127.0.0.1" && process.env.DOCKER_CONTAINER === "true" ? "0.0.0.0" : info.host;
 
   await new Promise<void>((resolve, reject) => {
     server.listen(info.port, bindHost, () => resolve());

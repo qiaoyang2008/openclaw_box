@@ -172,11 +172,48 @@ async function ensureGatewayConnection() {
   try {
     await gatewayConnectPromise
     console.log('[Canvas Node] Connected to Gateway successfully')
+
+    // Send node pairing request for auto-approval
+    await sendNodePairingRequest()
   } catch (err) {
     console.error('[Canvas Node] Failed to connect:', err)
     scheduleReconnect()
   } finally {
     gatewayConnectPromise = null
+  }
+}
+
+async function sendNodePairingRequest() {
+  try {
+    const nodeId = await getOrCreateNodeId()
+    const pairFrame = {
+      type: 'req',
+      id: crypto.randomUUID(),
+      method: 'node.pair.request',
+      params: {
+        nodeId: nodeId,
+        displayName: `Chrome Canvas (${navigator.userAgent.split(/[()]/)[1]?.split(';')[0] || 'Browser'})`,
+        platform: 'chrome-extension',
+        version: chrome.runtime.getManifest().version,
+        deviceFamily: 'browser',
+        caps: ['canvas'],
+        commands: [
+          'canvas.present',
+          'canvas.hide',
+          'canvas.navigate',
+          'canvas.eval',
+          'canvas.snapshot',
+          'canvas.a2ui.pushJSONL',
+          'canvas.a2ui.reset',
+        ],
+        silent: true,
+      },
+    }
+
+    sendToGateway(pairFrame)
+    console.log('[Canvas Node] Sent node pairing request')
+  } catch (err) {
+    console.error('[Canvas Node] Failed to send pairing request:', err)
   }
 }
 

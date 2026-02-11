@@ -105,6 +105,35 @@ export const nodeHandlers: GatewayRequestHandlers = {
         context.broadcast("node.pair.requested", result.request, {
           dropIfSlow: true,
         });
+
+        // Auto-approve local nodes if configured
+        const config = loadConfig();
+        const isLocalRequest =
+          p.remoteIp === "127.0.0.1" ||
+          p.remoteIp === "::1" ||
+          p.remoteIp?.startsWith("127.") ||
+          p.remoteIp?.startsWith("192.168.") || // Docker bridge network
+          p.remoteIp?.startsWith("172.") || // Docker internal network
+          !p.remoteIp;
+        const autoApprove = config.gateway?.nodes?.dangerouslyAllowLocalWithoutAuth === true;
+
+        if (isLocalRequest && autoApprove) {
+          const approved = await approveNodePairing(result.request.requestId);
+          if (approved) {
+            context.broadcast(
+              "node.pair.resolved",
+              {
+                requestId: approved.requestId,
+                status: "approved",
+                node: approved.node,
+              },
+              { dropIfSlow: true },
+            );
+            console.log(`[node.pair] Auto-approved local node: ${p.nodeId}`);
+            respond(true, { status: "approved", node: approved.node }, undefined);
+            return;
+          }
+        }
       }
       respond(true, result, undefined);
     });
